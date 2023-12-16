@@ -13,7 +13,7 @@ if [ $opcion -eq 1 ]; then
     for ((i=1; i<=$cantidad; i++))
     do
         canal=$(( ( RANDOM % 11 ) + 1 )) # Generar un número aleatorio entre 1 y 11
-        xterm -e sudo airbase-ng -e $nombre$i -c $canal wlan0 &
+        sudo airbase-ng -e $nombre$i -c $canal wlan0 &
         sleep 1  # Esperar 1 segundo antes de ejecutar el siguiente comando
     done
 elif [ $opcion -eq 2 ]; then
@@ -22,7 +22,7 @@ elif [ $opcion -eq 2 ]; then
     while IFS= read -r nombre
     do
         canal=$(( ( RANDOM % 11 ) + 1 )) # Generar un número aleatorio entre 1 y 11
-        xterm -e sudo airbase-ng -e $nombre -c $canal wlan0 &
+        sudo airbase-ng -e $nombre -c $canal wlan0 &
         sleep 1  # Esperar 1 segundo antes de ejecutar el siguiente comando
     done < "$archivo"
 else
