@@ -1,5 +1,16 @@
 #!/bin/bash
 
+echo "Seleccione una tarjeta de red:"
+select tarjeta in $(ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}')
+do
+    if [[ -z "$tarjeta" ]]; then
+        echo "Opción inválida. Por favor, seleccione una opción válida."
+    else
+        echo "Tarjeta de red seleccionada: $tarjeta"
+        break
+    fi
+done
+
 echo "Seleccione una opción:"
 echo "1.- Dedicarle nombre"
 echo "2.- Usar una lista txt para espamear redes"
@@ -13,7 +24,7 @@ if [ $opcion -eq 1 ]; then
     for ((i=1; i<=$cantidad; i++))
     do
         canal=$(( ( RANDOM % 11 ) + 1 )) # Generar un número aleatorio entre 1 y 11
-        sudo airbase-ng -e $nombre$i -c $canal wlan0 &
+        sudo airbase-ng -e $nombre$i -c $canal $tarjeta &
         sleep 1  # Esperar 1 segundo antes de ejecutar el siguiente comando
     done
 elif [ $opcion -eq 2 ]; then
@@ -22,7 +33,7 @@ elif [ $opcion -eq 2 ]; then
     while IFS= read -r nombre
     do
         canal=$(( ( RANDOM % 11 ) + 1 )) # Generar un número aleatorio entre 1 y 11
-        sudo airbase-ng -e $nombre -c $canal wlan0 &
+        sudo airbase-ng -e $nombre -c $canal $tarjeta &
         sleep 1  # Esperar 1 segundo antes de ejecutar el siguiente comando
     done < "$archivo"
 else
