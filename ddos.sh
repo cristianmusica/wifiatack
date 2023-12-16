@@ -1,15 +1,10 @@
 #!/bin/bash
 
+echo "Tarjetas de red disponibles:"
+ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}'
+
 echo "Seleccione una tarjeta de red:"
-select tarjeta in $(ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}')
-do
-    if [[ -z "$tarjeta" ]]; then
-        echo "Opción inválida. Por favor, seleccione una opción válida."
-    else
-        echo "Tarjeta de red seleccionada: $tarjeta"
-        break
-    fi
-done
+read tarjeta
 
 echo "Seleccione una opción:"
 echo "1.- Dedicarle nombre"
